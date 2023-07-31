@@ -1,5 +1,6 @@
 import os
 import redis
+import uuid
 
 
 class RedisClient:
@@ -11,6 +12,12 @@ class RedisClient:
 
         # Create the Redis client with the obtained host and port
         self.redis_client = redis.StrictRedis(host=_redis_host, port=_redis_port, db=0)
+
+    def create_key(self, api_name: str):
+        unique_id = str(uuid.uuid4())
+        key = f"{api_name}:{unique_id}"
+        self.redis_client.set(key, "")
+        return key
 
     def retrieve_results(self, redis_key: str):
         return self.redis_client.lrange(redis_key, 0, -1)

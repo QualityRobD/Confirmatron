@@ -1,8 +1,9 @@
 from flask import request, jsonify, make_response
 from flask_restx import Namespace, Resource
 from modules.redis_client import RedisClient
+from test_suite.api1.schemas import Api1ModelSchema
 import uuid
-from test_suite.api1.models.api1_model import Api1ModelSchema
+
 from modules.JsonUtility import JsonUtility
 
 api_call_results = []
@@ -14,7 +15,7 @@ api1_ns = Namespace("api1", description="API1 Namespace")
 # Create the route for /api1/test
 @api1_ns.route("/test", methods=["POST"])
 class TestResource(Resource):
-    @api1_ns.expect(Api1ModelSchema)  # Use the expect decorator to specify the expected request body model
+    @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
     def post(self):
 
         redis = RedisClient()
