@@ -1,20 +1,44 @@
 # app.py
 
-from flask import Flask
+from flask import Flask, request, jsonify, g
+from flask_cors import CORS
 from test_suite.api1.controllers import api1_ns
 from test_suite.api2.controllers import api2_ns
 from admin_api import admin_ns
 from api import api
 
 app = Flask(__name__)
+CORS(app)
 
 # Create the Flask-RESTx API instance
 api.init_app(app)
 
+test_namespaces = [
+    api1_ns,
+]
+
+@app.before_request
+def capture_test_key():
+    valid_endpoints = []
+    for ns in test_namespaces:
+        valid_endpoints.extend([resource.resource.endpoint for resource in ns.resources])
+
+    if request.endpoint in valid_endpoints:
+        test_key = request.headers.get('test-key')
+        if not test_key:
+            return jsonify({
+                'error': 'test-key is required to be sent in the header'
+            }), 400
+
+        # https://flask.palletsprojects.com/en/2.3.x/api/#flask.g
+        # g is the expected place in Flask to store stuff for a exactly one request
+        g.test_key = request.headers.get('test_key')
+
+
 # Add the API1 namespace to the API app
 api.add_namespace(admin_ns)
-api.add_namespace(api1_ns)
-# api.add_namespace(api2_ns)
+for namespace in test_namespaces:
+    api.add_namespace(namespace)
 
 if __name__ == '__main__':
     app.run(debug=True)

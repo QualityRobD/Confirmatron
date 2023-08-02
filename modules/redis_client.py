@@ -13,18 +13,21 @@ class RedisClient:
         # Create the Redis client with the obtained host and port
         self.redis_client = redis.StrictRedis(host=_redis_host, port=_redis_port, db=0)
 
-    def create_key(self, api_name: str):
+    def create_key(self, api_name: str, expire_seconds: int = 7200):
         unique_id = str(uuid.uuid4())
         key = f"{api_name}:{unique_id}"
-        self.redis_client.set(key, "")
+        self.redis_client.setex(key, expire_seconds, "")
         return key
 
-    def retrieve_results(self, redis_key: str):
-        return self.redis_client.lrange(redis_key, 0, -1)
+    def retrieve_results(self, key: str):
+        return self.redis_client.hgetall(key)
 
-    def store_result(self, redis_key: str, result):
-        self.redis_client.rpush(redis_key, result)
+    def store_result(self, key: str, result):
+        self.redis_client.hset(key, '', result)
 
     def get_redis_keys(self, api_name: str):
         all_keys = self.redis_client.keys(f"{api_name}:*")
         return [key.decode("utf-8") for key in all_keys]
+
+    def exists(self, key):
+        return self.redis_client.exists(key)

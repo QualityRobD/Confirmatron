@@ -1,12 +1,9 @@
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
-from modules.redis_client import RedisClient
 from test_suite.api1.schemas import Api1ModelSchema
-import uuid
+from modules.redis_client import RedisClient
 
-from modules.JsonUtility import JsonUtility
-
-api_call_results = []
+from modules.json_utility import JsonUtility
 
 # Create the Namespace
 api1_ns = Namespace("api1", description="API1 Namespace")
@@ -17,10 +14,6 @@ api1_ns = Namespace("api1", description="API1 Namespace")
 class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
     def post(self):
-
-        redis = RedisClient()
-        unique_id = str(uuid.uuid4())
-        redis_key = f"api1:{unique_id}"
 
         # Access the validated request data from the body using the 'json' attribute of the request object
         request_data = request.json
@@ -37,10 +30,17 @@ class TestResource(Resource):
         # Return the JSON-serializable dictionary as a JSON response
         # Convert the response data to JSON using jsonify
         try:
-            redis.store_result(redis_key, JsonUtility.to_string(result_data))
+            r = RedisClient()
+            if r.exists(g.test_key):
+                r.store_result(g.test_key, JsonUtility.to_string(result_data))
+            else:
+                return make_response(jsonify({
+                    'error': f'test-key with value `{g.test_key}` does not exist in our records.'
+                }), 400)
+
         except Exception as e:
-            print(e)
+            return make_response(jsonify({
+                'error': f'Failed to store test results. {e}'
+            }), 500)
 
-        response = {"message": "API call successful", "id": unique_id}
-
-        return make_response(jsonify(response), 201)
+        return make_response('', 201)

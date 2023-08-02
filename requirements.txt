@@ -5,3 +5,4 @@ marshmallow==3.20.1
 redis==4.6.0
 dataclasses==0.6
 marshmallow-dataclass==8.5.14
+Flask-Cors==4.0.0
