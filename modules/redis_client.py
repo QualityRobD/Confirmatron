@@ -1,7 +1,7 @@
 import os
 import redis
 import uuid
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from modules.constants import TestStatus
 from modules.json_utility import JsonUtility
 
@@ -42,6 +42,18 @@ class RedisClient:
         self.redis_client.expire(key, self.expire_seconds)
         return key
 
+    def initialize_test_suite(self, key: str):
+        """
+        Initialize the test suite by setting initial values for total_tests, total_pass, and total_fail.
+
+        Args:
+            key (str): The key of the test suite in Redis.
+        """
+
+        self.redis_client.hset(key, "total_tests", 0)
+        self.redis_client.hset(key, "total_pass", 0)
+        self.redis_client.hset(key, "total_fail", 0)
+
     def retrieve_results(self, key: str) -> Dict[str, str]:
         """
         Retrieve all fields and their values associated with the provided key from Redis.
@@ -53,6 +65,18 @@ class RedisClient:
             Dict[str, str]: A dictionary of field-value pairs from the Redis hash.
         """
         return {field.decode('utf-8'): value.decode('utf-8') for field, value in self.redis_client.hgetall(key).items()}
+
+    def get_total(self, key: str) -> Optional[int]:
+        """
+        Get the total count from Redis.
+
+        Args:
+            key (str): The key to fetch the total count for.
+
+        Returns:
+            int or None: The total count value, or None if the key does not exist.
+        """
+        return self.redis_client.get(key)
 
     def store_result(self, key: str, field: str, result: TestStatus, payload_sent: Dict[str, Any],
                      payload_received: Dict[str, Any], context: str):
@@ -84,27 +108,25 @@ class RedisClient:
         self.redis_client.expire(key, self.expire_seconds)
 
         # Update the total counters based on the test result
-        self.update_counters(result)
+        self.update_counters(result, key)
 
-    def update_counters(self, result: TestStatus):
+    def update_counters(self, result: TestStatus, key: str):
         """
         Update the total counters based on the test result.
 
         Args:
             result (TestStatus): The test result status (PASS or FAIL).
+            key (str): The key identifying the test.
 
         Raises:
             redis.exceptions.RedisError: If there is an issue with the Redis connection or storage.
         """
-        total_tests_key = "total_tests"
-        total_pass_key = "total_pass"
-        total_fail_key = "total_fail"
 
-        self.redis_client.incr(total_tests_key)
+        self.redis_client.hincrby(key, "total_tests", 1)
         if result == TestStatus.PASS:
-            self.redis_client.incr(total_pass_key)
+            self.redis_client.hincrby(key, "total_pass", 1)
         elif result == TestStatus.FAIL:
-            self.redis_client.incr(total_fail_key)
+            self.redis_client.hincrby(key, "total_fail", 1)
 
     def get_redis_keys(self, api_name: str) -> List[str]:
         """

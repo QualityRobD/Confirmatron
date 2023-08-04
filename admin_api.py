@@ -33,6 +33,7 @@ class CreateTestKey(Resource):
 
         r = RedisClient()
         redis_key = r.create_key(api_name)
+        r.initialize_test_suite(redis_key)
 
         response = {"test_key": f"{redis_key}", "api_name": api_name}
 

@@ -13,21 +13,47 @@ class Results:
         """
         self.redis_client = RedisClient()
 
-    def add_result(self, test_key: str, field: str, result: TestStatus,
+    def add_result(self, key: str, field: str, result: TestStatus,
                    payload_sent: Dict[str, Any], payload_received: Dict[str, Any], context: str):
         """
         Add a test result to the Redis database and update the counters.
 
         Args:
-            test_key (str): The key identifying the test.
+            key (str): The key identifying the test.
             field (str): The field where the result should be stored.
             result (TestStatus): The test result to store.
             payload_sent (dict): The payload sent during the test.
             payload_received (dict): The payload received during the test.
             context (str): Additional context or reason for the test result.
         """
-        self.redis_client.store_result(test_key, field, result, payload_sent, payload_received, context)
-        self.redis_client.update_counters(result)
+        self.redis_client.store_result(key, field, result, payload_sent, payload_received, context)
+
+    def get_total_tests(self) -> int:
+        """
+        Get the total number of tests performed.
+
+        Returns:
+            int: The total number of tests.
+        """
+        return self.redis_client.get_total("total_tests")
+
+    def get_total_pass(self) -> int:
+        """
+        Get the total number of passed tests.
+
+        Returns:
+            int: The total number of passed tests.
+        """
+        return self.redis_client.get_total("total_pass")
+
+    def get_total_fail(self) -> int:
+        """
+        Get the total number of failed tests.
+
+        Returns:
+            int: The total number of failed tests.
+        """
+        return self.redis_client.get_total("total_fail")
 
     def get_result(self, test_key: str, field: str) -> TestStatus:
         """
@@ -42,19 +68,6 @@ class Results:
         """
         result = self.redis_client.retrieve_results(test_key).get(field, None)
         return TestStatus(result) if result else None
-
-    def update_result(self, test_key: str, field: str, new_result: TestStatus):
-        """
-        Update a specific test result and update the counters.
-
-        Args:
-            test_key (str): The key identifying the test.
-            field (str): The field where the result is stored.
-            new_result (TestStatus): The new test result to store.
-        """
-        if self.redis_client.exists(test_key):
-            self.redis_client.store_result(test_key, field, new_result)
-            self.redis_client.update_counters(new_result)
 
     def get_results_by_key(self, test_key: str):
         """
