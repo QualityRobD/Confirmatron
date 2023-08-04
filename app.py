@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 from flask_restx import Api
 from test_suite.api1.controllers import api1_ns
-from test_suite.api2.controllers import api2_ns
 from admin_api import admin_ns
 
 

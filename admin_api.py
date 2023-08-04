@@ -69,8 +69,6 @@ class GetTestResultsByTestKey(Resource):
         return results
 
 
-
-
 @admin_ns.route("/testKeys", methods=["GET"])
 class ListKeysByApiName(Resource):
     def get(self):
