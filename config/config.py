@@ -61,8 +61,8 @@ class _TestApis:
     def __init__(self):
         self.apis = {}
 
-    def add_api(self, api_name: str):
-        self.apis[api_name] = Api(api_name)
+    def add_api(self, api_name: str, api: Api):
+        self.apis[api_name] = api
 
 
 class Config:

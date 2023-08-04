@@ -12,3 +12,4 @@ cachetools==5.3.1
 requests==2.31.0
 prance==23.6.21.0
 faker==19.2.0
+python-dotenv==1.0.0

@@ -1,12 +1,13 @@
 # app.py
 
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, current_app
 from flask_cors import CORS
 from flask_restx import Api
 import os
 import importlib.util
 from test_suite.api1.controllers import api1_ns
 from admin_api import admin_ns
+from config.config import Config
 
 
 app = Flask(__name__)
@@ -21,7 +22,7 @@ test_namespaces = [
 ]
 
 
-def _call_setup_on_all_api_config_files(directory: str = "config/apis"):
+def _call_setup_on_all_api_config_files(config: Config, directory: str = "config/apis"):
     """
     This function dynamically imports all Python modules in the specified directory and calls a setup function from each one.
 
@@ -34,7 +35,17 @@ def _call_setup_on_all_api_config_files(directory: str = "config/apis"):
             spec = importlib.util.spec_from_file_location(module_name, os.path.join(directory, filename))
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            module.setup()  # call setup function from the module
+
+            api_name = module.name
+            api_instance = module.setup()  # call setup function from the module
+
+            config.test_apis.add_api(api_name, api_instance)
+
+
+# Call the function on application startup
+config = Config()
+_call_setup_on_all_api_config_files(config)
+app.config['config'] = config
 
 
 @app.before_request
@@ -54,9 +65,6 @@ def capture_test_key():
         # g is the expected place in Flask to store stuff for a exactly one request
         g.test_key = request.headers.get('test_key')
 
-
-# Call the function on application startup
-_call_setup_on_all_api_config_files()
 
 # Add the API1 namespace to the API app
 api.add_namespace(admin_ns)
