@@ -44,17 +44,31 @@ class GetTestResultsByTestKey(Resource):
     def get(self, test_key):
         r = RedisClient()
 
-        results = r.retrieve_results(test_key)
+        raw_results = r.retrieve_results(test_key)
 
-        if not results:
+        if not raw_results:
             return make_response(jsonify({
                 "error": f"Test Results not found for {test_key}"
             }), 404)
 
-        results = {field: JsonUtility().from_string(data_point) for field, data_point in results.items()}
+        # Prepare an empty dictionary for the parsed results
+        results = {}
+
+        # Loop through each item in the raw results
+        for field, data_point in raw_results.items():
+            # If the data point is not an empty string, try to parse it as JSON
+            if data_point:
+                data_point = JsonUtility.from_string(data_point)
+
+            # Add the data point to the results dictionary if it's not None
+            if data_point is not None:
+                results[field] = data_point
 
         # Return the serialized results as a JSON response
-        return JsonUtility().from_string(results)
+        return results
+
+
+
 
 @admin_ns.route("/testKeys", methods=["GET"])
 class ListKeysByApiName(Resource):

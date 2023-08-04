@@ -8,7 +8,7 @@ class JsonUtility:
             return json.dumps(input_value)
         except Exception as e:
             print(f"Unable to convert {input_value} to string - {e}")
-        raise
+            return None
 
     @staticmethod
     def from_string(input_value):
@@ -16,4 +16,4 @@ class JsonUtility:
             return json.loads(input_value)
         except Exception as e:
             print(f"Unable to convert {input_value} from string - {e}")
-        raise
+            return None

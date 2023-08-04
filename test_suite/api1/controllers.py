@@ -1,13 +1,17 @@
 from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
 from test_suite.api1.schemas import Api1ModelSchema
-from modules.redis_client import RedisClient
+from modules.constants import TestStatus
+from modules.results import Results
+from random import randint
 
 from modules.json_utility import JsonUtility
 
 # Create the Namespace
 api1_ns = Namespace("api1", description="API1 Namespace")
 
+# Create instance of TestResult
+results = Results()
 
 # Create the route for /api1/test
 @api1_ns.route("/test", methods=["POST"])
@@ -30,9 +34,16 @@ class TestResource(Resource):
         # Return the JSON-serializable dictionary as a JSON response
         # Convert the response data to JSON using jsonify
         try:
-            r = RedisClient()
-            if r.exists(g.test_key):
-                r.store_result(g.test_key, JsonUtility.to_string(result_data))
+            if results.redis_client.exists(g.test_key):
+                test_name = f"test-{randint(1,100000000000)}"
+                save_data = JsonUtility.to_string(result_data)
+                if save_data:
+                    test_status = TestStatus.PASS
+                else:
+                    test_status = TestStatus.FAIL
+
+                results.add_result(g.test_key, test_name, test_status)
+
             else:
                 return make_response(jsonify({
                     'error': f'test-key with value `{g.test_key}` does not exist in our records.'
