@@ -2,7 +2,7 @@ from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
 from test_suite.api1.schemas import Api1ModelSchema
 from modules.constants import TestStatus
-from modules.results import Results
+from modules.results import Results, TestResult
 from random import randint
 
 from modules.json_utility import JsonUtility
@@ -14,6 +14,8 @@ api1_ns = Namespace("api1", description="API1 Namespace")
 results = Results()
 
 # Create the route for /api1/test
+from modules.results import Results, TestResult
+
 @api1_ns.route("/test", methods=["POST"])
 class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
@@ -35,14 +37,14 @@ class TestResource(Resource):
         # Convert the response data to JSON using jsonify
         try:
             if results.redis_client.exists(g.test_key):
-                test_name = f"test-{randint(1,100000000000)}"
+                test_name = f"test-{randint(1, 100000000000)}"
                 save_data = JsonUtility.to_string(result_data)
                 if save_data:
                     test_status = TestStatus.PASS
                 else:
                     test_status = TestStatus.FAIL
 
-                results.add_result(g.test_key, test_name, test_status)
+                results.add_result(g.test_key, test_name, test_status, payload_sent={}, payload_received={}, context="")
 
             else:
                 return make_response(jsonify({
