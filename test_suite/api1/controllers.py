@@ -1,14 +1,14 @@
-from flask import request, jsonify, make_response, g, current_app
+from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
 from test_suite.api1.schemas import Api1ModelSchema
 from modules.constants import TestStatus
 from modules.results import Results
 from random import randint
+from modules.json_utility import JsonUtility
+from modules.secrets_manager import SecretsManager
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from config.config import Api, Config
-
-from modules.json_utility import JsonUtility
 
 # Create the Namespace
 api1_ns = Namespace("api1", description="API1 Namespace")
@@ -21,10 +21,11 @@ results = Results()
 class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
     def post(self):
+        with SecretsManager.api_context("apiOne") as config:
+            d = config
+            g = config.api.auth_zero.test.auth_url
 
-        config: Config = current_app.config['config']
-        api_config: Api = config.test_apis.apis.get("apiOne", None)
-        name = api_config.api_name
+
 
 
         # Access the validated request data from the body using the 'json' attribute of the request object

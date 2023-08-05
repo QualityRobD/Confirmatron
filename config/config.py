@@ -1,4 +1,4 @@
-class _AuthZeroEnv:
+class AuthZeroEnv:
     def __init__(self):
         self.auth_url = ""
         self.audience = ""
@@ -15,9 +15,9 @@ class _Redis:
 
 class _ConfirmatronAuthZero:
     def __init__(self):
-        self.test = _AuthZeroEnv()
-        self.beta = _AuthZeroEnv()
-        self.prod = _AuthZeroEnv()
+        self.test = AuthZeroEnv()
+        self.beta = AuthZeroEnv()
+        self.prod = AuthZeroEnv()
 
 
 class _Confirmatron:
@@ -40,11 +40,11 @@ class _ControllersUnderTest:
         self.prod = ["", "", ""]
 
 
-class _ApiAuthZero:
+class ApiAuthZero:
     def __init__(self):
-        self.test = _AuthZeroEnv()
-        self.beta = _AuthZeroEnv()
-        self.prod = _AuthZeroEnv()
+        self.test = AuthZeroEnv()
+        self.beta = AuthZeroEnv()
+        self.prod = AuthZeroEnv()
 
 
 class Api:
@@ -53,7 +53,7 @@ class Api:
         self.app_id = ""
         self.base_url = _BaseUrl()
         self.teams_channel_link = ""
-        self.auth_zero = _ApiAuthZero()
+        self.auth_zero = ApiAuthZero()
         self.controllers_under_test = _ControllersUnderTest()
 
 

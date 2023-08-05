@@ -9,6 +9,7 @@ import importlib.util
 from test_suite.api1.controllers import api1_ns
 from admin_api import admin_ns
 from config.config import Config
+from modules.secrets_manager import SecretsManager
 
 
 app = Flask(__name__)
@@ -42,11 +43,16 @@ def _call_setup_on_all_api_config_files(config: Config, directory: str = "config
 
             config.test_apis.add_api(api_name, api_instance)
 
-
+#
+# SETUP
+#
 # Call the function on application startup
 config = Config()
 _call_setup_on_all_api_config_files(config)
 app.config['config'] = config
+
+# Create the SecretsManager instance
+app.config["secrets_manager"] = SecretsManager()
 
 
 @app.before_request
