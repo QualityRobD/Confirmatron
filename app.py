@@ -1,6 +1,7 @@
 # app.py
 
-from flask import Flask, request, jsonify, g, current_app
+from flask import Flask, request, jsonify, g
+from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
 from flask_restx import Api
 import os
@@ -64,6 +65,24 @@ def capture_test_key():
         # https://flask.palletsprojects.com/en/2.3.x/api/#flask.g
         # g is the expected place in Flask to store stuff for a exactly one request
         g.test_key = request.headers.get('test_key')
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """
+    Middleware error handler to catch all exceptions.
+
+    :param e: The exception that was raised.
+    :return: A JSON response with a description of the error and a HTTP status code of 500.
+    """
+    # pass through HTTP errors like 400 or 404, etc
+    if isinstance(e, HTTPException):
+        return e
+
+    # Handle non-HTTP exceptions like 500
+    app.logger.error(f"EXCEPTION: {e}")
+
+    return jsonify({'error': 'An unexpected error occurred'}), 500
 
 
 # Add the API1 namespace to the API app
