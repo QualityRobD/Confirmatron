@@ -3,7 +3,6 @@ import boto3
 from cachetools import TTLCache, cached
 from functools import cached_property
 from typing import Any
-from dotenv import load_dotenv
 import os
 from config.config import Config, Api
 
@@ -56,8 +55,6 @@ class SecretsManager(metaclass=SingletonMeta):
 
     @cached(cache=cache)
     def get_secret(self, key: str, api_name: str = None) -> Any:
-        config: Config = current_app.config['config']
-
         """
         Get a secret by its key. The secret is fetched from AWS Parameter Store
         the first time this method is called with a certain key, and then it's
@@ -70,18 +67,19 @@ class SecretsManager(metaclass=SingletonMeta):
         :return: The secret value.
         :raises ValueError: If the key does not match any attribute in the Config class.
         """
+        config: Config = current_app.config['config']
+
         try:
             if api_name:
-                config = config.test_apis.apis.get("apiOne")
+                key = f"{api_name}.{key}"
 
-            val = getattr(config, key)  # Directly get the attribute from the config
+            # Try to get the nested attribute from the config
+            val = self._get_nested_attr(config, key)
 
             # If the value is a placeholder, check the environment
             if isinstance(val, str) and val.startswith('{') and val.endswith('}'):
-                run_env = os.getenv('RUN_ENV')
-
+                run_env = os.getenv('ENVIRONMENT')
                 if run_env == 'LOCAL':
-                    load_dotenv()  # load environment variables from .env file
                     val = os.getenv(val[1:-1])
                 else:
                     # fetch the secret from AWS
@@ -114,6 +112,19 @@ class SecretsManager(metaclass=SingletonMeta):
         have been updated and the application needs to access the new values immediately.
         """
         cache.clear()
+
+    @staticmethod
+    def _get_nested_attr(obj, attr):
+        """
+        A helper function to get a nested attribute from an object.
+
+        :param obj: The object to get the attribute from.
+        :param attr: A string with the path to the attribute, using dot notation.
+        :returns: The value of the nested attribute.
+        """
+        for a in attr.split("."):
+            obj = getattr(obj, a)
+        return obj
 
     @classmethod
     def api_context(cls, api_name: str) -> '_ApiContextManager':

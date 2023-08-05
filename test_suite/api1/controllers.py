@@ -1,4 +1,4 @@
-from flask import request, jsonify, make_response, g
+from flask import request, jsonify, make_response, g, current_app
 from flask_restx import Namespace, Resource
 from test_suite.api1.schemas import Api1ModelSchema
 from modules.constants import TestStatus
@@ -22,45 +22,49 @@ class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
     def post(self):
         with SecretsManager.api_context("apiOne") as config:
-            d = config
-            g = config.api.auth_zero.test.auth_url
+            api_name = config.api.api_name
+            app_id = config.api.app_id
+            base_url = config.api.base_url
+            teams_channel_link = config.api.teams_channel_link
+            controllers_under_test = config.api.controllers_under_test
 
+            bearer_token_test = current_app.config.get('bearer_token_test', None)
+            bearer_token_beta = current_app.config.get('bearer_token_beta', None)
+            bearer_token_prod = current_app.config.get('bearer_token_prod', None)
 
+            # Access the validated request data from the body using the 'json' attribute of the request object
+            request_data = request.json
 
+            # Perform any data validation or processing as needed
+            # You can access the validated fields using the schema
+            name = request_data.get("name")
+            age = request_data.get("age")
 
-        # Access the validated request data from the body using the 'json' attribute of the request object
-        request_data = request.json
+            # Your logic for processing the data goes here...
+            # For example, you could return a dictionary as a JSON-serializable response
+            result_data = {"message": f"Received data: Name - {name}, Age - {age}"}
 
-        # Perform any data validation or processing as needed
-        # You can access the validated fields using the schema
-        name = request_data.get("name")
-        age = request_data.get("age")
+            # Return the JSON-serializable dictionary as a JSON response
+            # Convert the response data to JSON using jsonify
+            try:
+                if results.redis_client.exists(g.test_key):
+                    test_name = f"test-{randint(1, 100000000000)}"
+                    save_data = JsonUtility.serialize(result_data)
+                    if save_data:
+                        test_status = TestStatus.PASS
+                    else:
+                        test_status = TestStatus.FAIL
 
-        # Your logic for processing the data goes here...
-        # For example, you could return a dictionary as a JSON-serializable response
-        result_data = {"message": f"Received data: Name - {name}, Age - {age}"}
+                    results.add_result(g.test_key, test_name, test_status, payload_sent={}, payload_received={}, context="")
 
-        # Return the JSON-serializable dictionary as a JSON response
-        # Convert the response data to JSON using jsonify
-        try:
-            if results.redis_client.exists(g.test_key):
-                test_name = f"test-{randint(1, 100000000000)}"
-                save_data = JsonUtility.to_string(result_data)
-                if save_data:
-                    test_status = TestStatus.PASS
                 else:
-                    test_status = TestStatus.FAIL
+                    return make_response(jsonify({
+                        'error': f'test-key with value `{g.test_key}` does not exist in our records.'
+                    }), 400)
 
-                results.add_result(g.test_key, test_name, test_status, payload_sent={}, payload_received={}, context="")
-
-            else:
+            except Exception as e:
                 return make_response(jsonify({
-                    'error': f'test-key with value `{g.test_key}` does not exist in our records.'
-                }), 400)
+                    'error': f'Failed to store test results. {e}'
+                }), 500)
 
-        except Exception as e:
-            return make_response(jsonify({
-                'error': f'Failed to store test results. {e}'
-            }), 500)
-
-        return make_response('', 201)
+            return make_response('', 201)

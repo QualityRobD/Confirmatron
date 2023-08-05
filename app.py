@@ -6,10 +6,12 @@ from flask_cors import CORS
 from flask_restx import Api
 import os
 import importlib.util
+from dotenv import load_dotenv
 from test_suite.api1.controllers import api1_ns
 from admin_api import admin_ns
 from config.config import Config
 from modules.secrets_manager import SecretsManager
+from modules.auth_0_handler import Auth0Handler
 
 
 app = Flask(__name__)
@@ -18,6 +20,9 @@ CORS(app)
 # Create the Flask-RESTx API instance
 api = Api(version='1.0', title='Confirmatron', description='API Testing Framework')
 api.init_app(app)
+
+# load environment variables from .env file
+load_dotenv()
 
 test_namespaces = [
     api1_ns,
@@ -52,7 +57,19 @@ _call_setup_on_all_api_config_files(config)
 app.config['config'] = config
 
 # Create the SecretsManager instance
-app.config["secrets_manager"] = SecretsManager()
+secrets_manager = SecretsManager()
+app.config["secrets_manager"] = secrets_manager
+
+with app.app_context():
+    auth = Auth0Handler(secrets_manager)
+    test_token = auth.get_test_token()
+    app.config['bearer_token_test'] = test_token
+
+    # beta_token = auth.get_beta_token()
+    # app.config['bearer_token_beta'] = beta_token
+    #
+    # prod_token = auth.get_prod_token()
+    # app.config['bearer_token_prod'] = prod_token
 
 
 @app.before_request

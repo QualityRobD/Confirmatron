@@ -103,7 +103,7 @@ class RedisClient:
             "payload_received": payload_received,
             "context": context,
         }
-        data_to_store_str = JsonUtility.to_string(data_to_store)
+        data_to_store_str = JsonUtility.serialize(data_to_store)
         self.redis_client.hset(key, field, data_to_store_str)
         self.redis_client.expire(key, self.expire_seconds)
 

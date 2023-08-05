@@ -1,9 +1,7 @@
 import requests
 from cachetools import TTLCache, cached
 from typing import Optional
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from modules.secrets_manager import SecretsManager
+from modules.secrets_manager import SecretsManager
 
 # Global cache for Auth0 credentials
 # stores up to 3 items (one per environment), each expires after 1800 seconds (30 minutes)

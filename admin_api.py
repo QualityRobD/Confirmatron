@@ -59,7 +59,7 @@ class GetTestResultsByTestKey(Resource):
         for field, data_point in raw_results.items():
             # If the data point is not an empty string, try to parse it as JSON
             if data_point:
-                data_point = JsonUtility.from_string(data_point)
+                data_point = JsonUtility.deserialize(data_point)
 
             # Add the data point to the results dictionary if it's not None
             if data_point is not None:
