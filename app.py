@@ -11,7 +11,6 @@ from test_suite.api1.controllers import api1_ns
 from admin_api import admin_ns
 from config.config import Config
 from modules.secrets_manager import SecretsManager
-from modules.auth_0_handler import Auth0Handler
 
 
 app = Flask(__name__)
@@ -58,18 +57,7 @@ app.config['config'] = config
 
 # Create the SecretsManager instance
 secrets_manager = SecretsManager()
-app.config["secrets_manager"] = secrets_manager
-
-with app.app_context():
-    auth = Auth0Handler(secrets_manager)
-    test_token = auth.get_test_token()
-    app.config['bearer_token_test'] = test_token
-
-    # beta_token = auth.get_beta_token()
-    # app.config['bearer_token_beta'] = beta_token
-    #
-    # prod_token = auth.get_prod_token()
-    # app.config['bearer_token_prod'] = prod_token
+app.config['secrets_manager'] = secrets_manager
 
 
 @app.before_request

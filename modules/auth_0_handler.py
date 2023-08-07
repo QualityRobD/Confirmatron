@@ -1,7 +1,7 @@
 import requests
 from cachetools import TTLCache, cached
 from typing import Optional
-from modules.secrets_manager import SecretsManager
+from flask import current_app
 
 # Global cache for Auth0 credentials
 # stores up to 3 items (one per environment), each expires after 1800 seconds (30 minutes)
@@ -13,13 +13,12 @@ class Auth0Handler:
     This class handles authentication with Auth0 for multiple environments.
     """
 
-    def __init__(self, secrets_manager: SecretsManager):
+    def __init__(self):
         """
         Initialize the Auth0Handler.
 
-        :param secrets_manager: An instance of SecretsManager.
         """
-        self.secrets_manager = secrets_manager
+        self.secrets_manager = current_app.config['secrets_manager']
 
     def _get_auth0_token(self, env: str) -> Optional[str]:
         """

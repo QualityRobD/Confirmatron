@@ -1,4 +1,4 @@
-from flask import request, jsonify, make_response, g, current_app
+from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
 from test_suite.api1.schemas import Api1ModelSchema
 from modules.constants import TestStatus
@@ -6,9 +6,8 @@ from modules.results import Results
 from random import randint
 from modules.json_utility import JsonUtility
 from modules.secrets_manager import SecretsManager
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from config.config import Api, Config
+from modules.http_client import HttpClient
+from modules.constants import Environments
 
 # Create the Namespace
 api1_ns = Namespace("api1", description="API1 Namespace")
@@ -22,15 +21,13 @@ class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
     def post(self):
         with SecretsManager.api_context("apiOne") as config:
+            http_client = HttpClient("http://192.168.1.59/api/", Environments.TEST)
+
             api_name = config.api.api_name
             app_id = config.api.app_id
             base_url = config.api.base_url
             teams_channel_link = config.api.teams_channel_link
             controllers_under_test = config.api.controllers_under_test
-
-            bearer_token_test = current_app.config.get('bearer_token_test', None)
-            bearer_token_beta = current_app.config.get('bearer_token_beta', None)
-            bearer_token_prod = current_app.config.get('bearer_token_prod', None)
 
             # Access the validated request data from the body using the 'json' attribute of the request object
             request_data = request.json
@@ -46,7 +43,10 @@ class TestResource(Resource):
 
             # Return the JSON-serializable dictionary as a JSON response
             # Convert the response data to JSON using jsonify
+            response = http_client.get("private")
+
             try:
+
                 if results.redis_client.exists(g.test_key):
                     test_name = f"test-{randint(1, 100000000000)}"
                     save_data = JsonUtility.serialize(result_data)
