@@ -1,6 +1,6 @@
 import pytest
 import requests_mock
-from modules.http_client import HttpClient
+from src.modules.http_client import HttpClient
 
 
 @pytest.fixture

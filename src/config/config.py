@@ -23,18 +23,18 @@ class _ConfirmatronAuthZero:
             client_secret="{CONFIRMATRON_AUTH_ZERO_TEST_CLIENT_SECRET}"
         )
         self.beta = AuthZeroEnv(
-            auth_url="{PLACEHOLDER}",
-            audience="{PLACEHOLDER}",
-            grant_type="{PLACEHOLDER}",
-            client_id="{PLACEHOLDER}",
-            client_secret="{PLACEHOLDER}"
+            auth_url="",
+            audience="",
+            grant_type="client_credentials",
+            client_id="",
+            client_secret="{CONFIRMATRON_AUTH_ZERO_BETA_CLIENT_SECRET}"
         )
         self.prod = AuthZeroEnv(
-            auth_url="{PLACEHOLDER}",
-            audience="{PLACEHOLDER}",
-            grant_type="{PLACEHOLDER}",
-            client_id="{PLACEHOLDER}",
-            client_secret="{PLACEHOLDER}"
+            auth_url="",
+            audience="",
+            grant_type="client_credentials",
+            client_id="",
+            client_secret="{CONFIRMATRON_AUTH_ZERO_PROD_CLIENT_SECRET}"
         )
 
 

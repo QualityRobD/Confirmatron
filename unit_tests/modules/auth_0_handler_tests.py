@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from modules.auth_0_handler import Auth0Handler
+from src.modules.auth_0_handler import Auth0Handler
 
 
 class TestAuth0Handler(unittest.TestCase):

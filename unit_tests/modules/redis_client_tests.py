@@ -1,8 +1,6 @@
 import unittest
-import os
-import redis
 from unittest.mock import MagicMock, patch
-from modules.redis_client import RedisClient, TestStatus
+from src.modules.redis_client import RedisClient, TestStatus
 
 
 class TestRedisClient(unittest.TestCase):

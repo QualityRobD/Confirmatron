@@ -1,5 +1,5 @@
 import unittest
-from modules.json_utility import JsonUtility
+from src.modules.json_utility import JsonUtility
 
 class TestJsonUtility(unittest.TestCase):
     def test_to_string(self):

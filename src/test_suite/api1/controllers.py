@@ -1,9 +1,9 @@
 from flask import request, jsonify, make_response, g
 from flask_restx import Namespace, Resource
+from random import randint
 from test_suite.api1.schemas import Api1ModelSchema
 from modules.constants import TestStatus
 from modules.results import Results
-from random import randint
 from modules.json_utility import JsonUtility
 from modules.http_client import HttpClient
 from modules.constants import Environments
@@ -46,6 +46,7 @@ class TestResource(Resource):
         # Return the JSON-serializable dictionary as a JSON response
         # Convert the response data to JSON using jsonify
         response = http_client.get("private")
+        response.raise_for_status()
 
         try:
 

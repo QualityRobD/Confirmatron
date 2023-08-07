@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
-from modules.constants import TestStatus
-from modules.results import Results, TestResult
+from src.modules.constants import TestStatus
+from src.modules.results import Results, TestResult
 
 
 class TestResults(unittest.TestCase):

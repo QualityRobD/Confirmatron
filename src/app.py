@@ -26,7 +26,7 @@ test_namespaces = [
 ]
 
 
-def _call_setup_on_all_api_config_files(config: Config, directory: str = "config/apis"):
+def _call_setup_on_all_api_config_files(config: Config, directory: str = "src/config/apis"):
     """
     This function dynamically imports all Python modules in the specified directory and calls a setup function from each one.
 
