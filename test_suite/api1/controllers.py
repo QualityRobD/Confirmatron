@@ -5,9 +5,9 @@ from modules.constants import TestStatus
 from modules.results import Results
 from random import randint
 from modules.json_utility import JsonUtility
-from modules.secrets_manager import SecretsManager
 from modules.http_client import HttpClient
 from modules.constants import Environments
+from modules.decorators import load_api_config
 
 # Create the Namespace
 api1_ns = Namespace("api1", description="API1 Namespace")
@@ -19,52 +19,54 @@ results = Results()
 @api1_ns.route("/test", methods=["POST"])
 class TestResource(Resource):
     @api1_ns.expect(Api1ModelSchema())  # Use the expect decorator to specify the expected request body model
+    @load_api_config("apiOne")
     def post(self):
-        with SecretsManager.api_context("apiOne") as config:
-            http_client = HttpClient("http://192.168.1.59/api/", Environments.TEST)
+        http_client = HttpClient("http://192.168.1.59/api/", Environments.TEST)
 
-            api_name = config.api.api_name
-            app_id = config.api.app_id
-            base_url = config.api.base_url
-            teams_channel_link = config.api.teams_channel_link
-            controllers_under_test = config.api.controllers_under_test
+        api_name = g.api_config.api_name
+        app_id = g.api_config.app_id
+        base_url_test = g.api_config.base_url.test
+        base_url_beta = g.api_config.base_url.beta
+        base_url_prod = g.api_config.base_url.prod
+        teams_channel_link = g.api_config.teams_channel_link
+        controllers_under_test = g.api_config.controllers_under_test
 
-            # Access the validated request data from the body using the 'json' attribute of the request object
-            request_data = request.json
+        # Access the validated request data from the body using the 'json' attribute of the request object
+        request_data = request.json
 
-            # Perform any data validation or processing as needed
-            # You can access the validated fields using the schema
-            name = request_data.get("name")
-            age = request_data.get("age")
+        # Perform any data validation or processing as needed
+        # You can access the validated fields using the schema
+        name = request_data.get("name")
+        age = request_data.get("age")
 
-            # Your logic for processing the data goes here...
-            # For example, you could return a dictionary as a JSON-serializable response
-            result_data = {"message": f"Received data: Name - {name}, Age - {age}"}
+        # Your logic for processing the data goes here...
+        # For example, you could return a dictionary as a JSON-serializable response
+        result_data = {"message": f"Received data: Name - {name}, Age - {age}"}
 
-            # Return the JSON-serializable dictionary as a JSON response
-            # Convert the response data to JSON using jsonify
-            response = http_client.get("private")
+        # Return the JSON-serializable dictionary as a JSON response
+        # Convert the response data to JSON using jsonify
+        response = http_client.get("private")
 
-            try:
+        try:
 
-                if results.redis_client.exists(g.test_key):
-                    test_name = f"test-{randint(1, 100000000000)}"
-                    save_data = JsonUtility.serialize(result_data)
-                    if save_data:
-                        test_status = TestStatus.PASS
-                    else:
-                        test_status = TestStatus.FAIL
-
-                    results.add_result(g.test_key, test_name, test_status, payload_sent={}, payload_received={}, context="")
-
+            if results.redis_client.exists(g.test_key):
+                test_name = f"test-{randint(1, 100000000000)}"
+                save_data = JsonUtility.serialize(result_data)
+                if save_data:
+                    test_status = TestStatus.PASS
                 else:
-                    return make_response(jsonify({
-                        'error': f'test-key with value `{g.test_key}` does not exist in our records.'
-                    }), 400)
+                    test_status = TestStatus.FAIL
 
-            except Exception as e:
+                results.add_result(g.test_key, test_name, test_status, payload_sent={}, payload_received={}, context="")
+
+            else:
                 return make_response(jsonify({
-                    'error': f'Failed to store test results. {e}'
-                }), 500)
+                    'error': f'test-key with value `{g.test_key}` does not exist in our records.'
+                }), 400)
 
-            return make_response('', 201)
+        except Exception as e:
+            return make_response(jsonify({
+                'error': f'Failed to store test results. {e}'
+            }), 500)
+
+        return make_response('', 201)

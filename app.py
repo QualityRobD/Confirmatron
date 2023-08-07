@@ -1,5 +1,3 @@
-# app.py
-
 from flask import Flask, request, jsonify, g
 from werkzeug.exceptions import HTTPException
 from flask_cors import CORS
